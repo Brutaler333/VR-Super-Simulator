@@ -3,15 +3,15 @@ using UnityEngine.InputSystem;
 
 public class ContinuousMovementPhysics : MonoBehaviour
 {
-    public float speed = 1;
+    public float speed = 3;
     public float turnSpeed = 33;
-    private float jumpVelocity = 7;
+    private float jumpVelocity = 3;
     public float jumpHeight = 1.5f;
     public bool onlyMoveWhenGrounded = false;
 
-    public bool jumpWithHand = true;
-    public float minJumpWithHandSpeed = 2;
-    public float maxJumpWithHandSpeed = 7;
+    /*public bool jumpWithHand = true;*/
+    public float minJumpWithHandSpeed = 10;
+    public float maxJumpWithHandSpeed = 15;
 
     public InputActionProperty moveInputSource;
     public InputActionProperty turnInputSource;
@@ -37,7 +37,7 @@ public class ContinuousMovementPhysics : MonoBehaviour
 
         bool jumpInput = jumpInputSource.action.WasPressedThisFrame();
 
-        if(!jumpWithHand)
+        /*if(!jumpWithHand)
         {
             if(jumpInput && isGrounded)
             {
@@ -53,28 +53,31 @@ public class ContinuousMovementPhysics : MonoBehaviour
             {
                 rb.linearVelocity = Vector3.up * Mathf.Clamp(handSpeed, minJumpWithHandSpeed, maxJumpWithHandSpeed);
             }
+        }*/
+        bool inputJumpPressed = jumpInputSource.action.IsPressed();
+        float handSpeed = ((leftHandRB.linearVelocity - rb.linearVelocity).magnitude + (rightHandRB.linearVelocity - rb.linearVelocity).magnitude) / 2;
+        if(inputJumpPressed && isGrounded && handSpeed > minJumpWithHandSpeed)
+        {
+            rb.linearVelocity = Vector3.up * jumpVelocity;
         }
     }
 
     private void FixedUpdate()
     {
         isGrounded = CheckIfGrounded();
-        if (isGrounded || (onlyMoveWhenGrounded  && isGrounded))
+        /*if (isGrounded || (onlyMoveWhenGrounded  && isGrounded))
         {
-            Quaternion yaw = Quaternion.Euler(0, directionSource.eulerAngles.y, 0);
-            Vector3 direction = yaw * new Vector3(inputMoveAxis.x, 0, inputMoveAxis.y);
 
-            Vector3 targetMovePosition = rb.position + direction * Time.fixedDeltaTime * speed;
-
-            Vector3 axis = Vector3.up;
-            float angle = turnSpeed * Time.fixedDeltaTime * inputTurnAxis;
-
-            Quaternion q = Quaternion.AngleAxis(angle, axis);
-            rb.MoveRotation(rb.rotation * q);
-
-            Vector3 newPosition = q * (targetMovePosition - turnSource.position) + turnSource.position;
-            rb.MovePosition(newPosition);
-        }
+        }*/
+        Quaternion yaw = Quaternion.Euler(0, directionSource.eulerAngles.y, 0);
+        Vector3 direction = yaw * new Vector3(inputMoveAxis.x, 0, inputMoveAxis.y);
+        Vector3 targetMovePosition = rb.position + direction * Time.fixedDeltaTime * speed;
+        Vector3 axis = Vector3.up;
+        float angle = turnSpeed * Time.fixedDeltaTime * inputTurnAxis;
+        Quaternion q = Quaternion.AngleAxis(angle, axis);
+        rb.MoveRotation(rb.rotation * q);
+        Vector3 newPosition = q * (targetMovePosition - turnSource.position) + turnSource.position;
+        rb.MovePosition(newPosition);
     }
 
     public bool CheckIfGrounded()
